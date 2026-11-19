@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Виселица: Символы химических элементов</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+            background: #f5f7fb;
+            color: #1e2a3a;
+            line-height: 1.6;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 40px -12px rgba(0, 20, 40, 0.25);
+            padding: 32px 36px;
+            transition: all 0.2s;
+        }
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #0b2b4b;
+            letter-spacing: -0.01em;
+            border-left: 8px solid #3b8cff;
+            padding-left: 24px;
+        }
+        .subhead {
+            color: #5a6e85;
+            margin-bottom: 32px;
+            font-size: 1.1rem;
+            border-left: 8px solid #b0c9e8;
+            padding-left: 24px;
+        }
+        .card {
+            background: #fafcff;
+            border-radius: 24px;
+            padding: 24px 28px;
+            margin-bottom: 28px;
+            border: 1px solid #e2edff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        }
+        .game-area {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 32px;
+            align-items: flex-start;
+            justify-content: center;
+        }
+        .hangman-drawing {
+            flex: 0 0 280px;
+            display: flex;
+            justify-content: center;
+        }
+        .hangman-svg {
+            width: 280px;
+            height: 340px;
+        }
+        .hangman-svg line,
+        .hangman-svg circle {
+            stroke: #1e2a3a;
+            stroke-width: 4;
+            stroke-linecap: round;
+            fill: none;
+        }
+        .hangman-svg .gallows {
+            stroke: #4a5e7a;
+            stroke-width: 4;
+        }
+        .hangman-svg .part {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .hangman-svg .part.visible {
+            opacity: 1;
+        }
+        .word-area {
+            flex: 1;
+            min-width: 300px;
+        }
+        .word-slots {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 24px;
+        }
+        .letter-slot {
+            width: 48px;
+            height: 56px;
+            border-bottom: 4px solid #3b8cff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            color: #0b2b4b;
+            text-transform: uppercase;
+            transition: border-color 0.2s;
+        }
+        .letter-slot.revealed {
+            border-bottom-color: #2eb872;
+            color: #136b3e;
+        }
+        .letter-slot.missed {
+            color: #b13e2e;
+            border-bottom-color: #e25041;
+        }
+        .keyboard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: center;
+            margin-bottom: 16px;
+        }
+        .key-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            border: 2px solid #cde0f5;
+            background: white;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1e3a5f;
+            cursor: pointer;
+            transition: 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+        }
+        .key-btn:hover:not(:disabled) {
+            background: #e3efff;
+            border-color: #3b8cff;
+            transform: translateY(-2px);
+        }
+        .key-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            background: #f0f4fa;
+            border-color: #dee9f6;
+        }
+        .key-btn.correct {
+            background: #d7f0e0;
+            border-color: #2eb872;
+            color: #136b3e;
+            opacity: 1;
+        }
+        .key-btn.incorrect {
+            background: #ffe2df;
+            border-color: #e25041;
+            color: #b13e2e;
+            opacity: 1;
+        }
+        .key-btn.pressed {
+            transform: translateY(2px) scale(0.94);
+            background: #dbe9ff;
+            border-color: #1e6eff;
+        }
+        .keyboard-hint {
+            text-align: center;
+            font-size: 0.88rem;
+            color: #7e96b3;
+            margin-bottom: 20px;
+        }
+        .hint-box {
+            background: #fff8e6;
+            border: 2px dashed #f0c040;
+            border-radius: 16px;
+            padding: 14px 20px;
+            margin-bottom: 20px;
+            font-size: 1.05rem;
+            color: #7a5b00;
+            display: none;
+        }
+        .hint-box.visible {
+            display: block;
+        }
+        .hint-box strong {
+            color: #c48f00;
+        }
+        .message-box {
+            margin-bottom: 20px;
+            padding: 14px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-align: center;
+            display: none;
+        }
+        .message-box.win {
+            display: block;
+            background: #d7f0e0;
+            color: #136b3e;
+        }
+        .message-box.lose {
+            display: block;
+            background: #ffe2df;
+            color: #b13e2e;
+        }
+        .result-card {
+            background: #f0f7ff;
+            border-radius: 20px;
+            padding: 20px 24px;
+            margin-top: 16px;
+            border: 1px solid #b8d4ff;
+            display: none;
+        }
+        .result-card.visible {
+            display: block;
+        }
+        .result-card h3 {
+            font-size: 1.4rem;
+            color: #0b2b4b;
+            margin-bottom: 12px;
+        }
+        .result-card .formula {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: #1e6eff;
+            margin-bottom: 8px;
+        }
+        .result-card .salt-name {
+            font-size: 1.1rem;
+            color: #136b3e;
+            margin-bottom: 4px;
+        }
+        .btn-check {
+            background: #1e6eff;
+            border: none;
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 10px 26px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.15s;
+            box-shadow: 0 4px 12px rgba(30, 110, 255, 0.3);
+            margin-top: 6px;
+            margin-right: 12px;
+            border: 1px solid #307cff;
+        }
+        .btn-check:hover {
+            background: #0b5ae0;
+            transform: translateY(-1px);
+            box-shadow: 0 8px 18px rgba(30, 110, 255, 0.4);
+        }
+        .btn-check:active {
+            transform: translateY(1px);
+            box-shadow: 0 2px 6px rgba(30, 110, 255, 0.4);
+        }
+        .btn-reset {
+            background: #eef3fc;
+            border: 1px solid #b8d0ee;
+            color: #2a4e7a;
+            font-weight: 500;
+            padding: 10px 22px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: 0.15s;
+            font-size: 1rem;
+        }
+        .btn-reset:hover {
+            background: #dee9fc;
+            border-color: #7aa9e0;
+        }
+        .footer-note {
+            margin-top: 32px;
+            text-align: center;
+            font-size: 0.9rem;
+            color: #7e96b3;
+            border-top: 1px solid #d8e6fc;
+            padding-top: 22px;
+        }
+        .page-nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #e2edff;
+            padding-bottom: 12px;
+        }
+        .page-nav button {
+            background: transparent;
+            border: none;
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 8px 16px;
+            border-radius: 40px;
+            cursor: pointer;
+            color: #5a6e85;
+            transition: 0.15s;
+            white-space: nowrap;
+        }
+        .page-nav button.active {
+            background: #1e6eff;
+            color: white;
+            box-shadow: 0 4px 10px rgba(30, 110, 255, 0.3);
+        }
+        .page-nav button:hover:not(.active) {
+            background: #eef3fc;
+        }
+        .page-section {
+            display: none;
+        }
+        .page-section.active {
+            display: block;
+        }
+        .game-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-top: 20px;
+            align-items: center;
+        }
+        /* ---- Таблица в справке ---- */
+        .oxide-table th {
+            text-align: left;
+            font-size: 0.95rem;
+            color: #5a6e85;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-bottom: 2px solid #d8e6fc;
+        }
+        .oxide-table td {
+            padding: 8px 12px;
+            background: white;
+            border-top: 1px solid #e8f1ff;
+            border-bottom: 1px solid #e8f1ff;
+        }
+        .oxide-table td:first-child {
+            border-left: 1px solid #e8f1ff;
+            border-radius: 12px 0 0 12px;
+            font-weight: 600;
+            color: #0b2b4b;
+        }
+        .oxide-table td:last-child {
+            border-right: 1px solid #e8f1ff;
+            border-radius: 0 12px 12px 0;
+            color: #136b3e;
+        }
+        .sym {
+            font-weight: 700;
+            color: #1e6eff;
+            font-size: 1.05rem;
+        }
+        @media (max-width: 640px) {
+            .container { padding: 20px 16px; }
+            h1 { font-size: 1.6rem; padding-left: 16px; }
+            .subhead { padding-left: 16px; }
+            .hangman-drawing { flex: 0 0 200px; }
+            .hangman-svg { width: 200px; height: 260px; }
+            .letter-slot { width: 34px; height: 44px; font-size: 1.5rem; }
+            .key-btn { width: 40px; height: 40px; font-size: 1rem; }
+            .page-nav button { font-size: 0.85rem; padding: 6px 12px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Виселица: Символы химических элементов</h1>
+    <div class="subhead">Угадайте название элемента по буквам</div>
+
+    <div class="page-nav">
+        <button class="active" data-page="gamePage">Игра</button>
+        <button data-page="theoryPage">Справка</button>
+    </div>
+
+    <!-- ========== СТРАНИЦА ИГРЫ ========== -->
+    <div id="gamePage" class="page-section active">
+        <div class="card">
+            <div class="game-area">
+                <!-- Виселица -->
+                <div class="hangman-drawing">
+                    <svg class="hangman-svg" viewBox="0 0 280 340">
+                        <!-- Основание (всегда видно) -->
+                        <line x1="40" y1="310" x2="200" y2="310" class="gallows" />
+                        <line x1="120" y1="310" x2="120" y2="40" class="gallows" />
+                        <line x1="120" y1="40" x2="230" y2="40" class="gallows" />
+                        <line x1="230" y1="40" x2="230" y2="70" class="gallows" />
+
+                        <!-- Части тела (появляются по ошибкам) -->
+                        <circle cx="230" cy="100" r="28" class="part" id="part-head" />
+                        <line x1="230" y1="128" x2="230" y2="220" class="part" id="part-body" />
+                        <line x1="230" y1="150" x2="190" y2="190" class="part" id="part-left-arm" />
+                        <line x1="230" y1="150" x2="270" y2="190" class="part" id="part-right-arm" />
+                        <line x1="230" y1="220" x2="190" y2="280" class="part" id="part-left-leg" />
+                        <line x1="230" y1="220" x2="270" y2="280" class="part" id="part-right-leg" />
+                    </svg>
+                </div>
+
+                <!-- Игровое поле -->
+                <div class="word-area">
+                    <div class="word-slots" id="wordSlots"></div>
+
+                    <div class="hint-box" id="hintBox">
+                        💡 <strong>Подсказка:</strong> <span id="hintText"></span>
+                    </div>
+
+                    <div class="message-box" id="messageBox"></div>
+
+                    <div class="keyboard" id="keyboard"></div>
+                    <div class="keyboard-hint">⌨️ Можно вводить буквы с клавиатуры (работает в русской и английской раскладке)</div>
+
+                    <div class="game-controls">
+                        <button class="btn-check" id="btnNewGame">Новая игра</button>
+                        <button class="btn-reset" id="btnRestart">Сбросить</button>
+                    </div>
+
+                    <div class="result-card" id="resultCard">
+                        <h3>Результат</h3>
+                        <div class="formula" id="resultFormula"></div>
+                        <div class="salt-name" id="resultSalt"></div>
+                        <div style="margin-top:12px; color:#5a6e85;" id="resultName"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== СТРАНИЦА СПРАВКИ ========== -->
+    <div id="theoryPage" class="page-section">
+        <div class="card">
+            <h2><span class="badge" style="background:#3b8cff;color:white;font-size:0.9rem;padding:4px 12px;border-radius:40px;font-weight:500;">📖</span> Символы химических элементов</h2>
+            <div class="theory-text">
+                <p style="margin-bottom:16px;">В этом тренажёре нужно угадать название химического элемента. Обратите внимание: символ элемента далеко не всегда читается так же, как название (например, <span class="sym">H</span> — «аш», <span class="sym">C</span> — «цэ»).</p>
+                <table class="oxide-table" style="width:100%; border-collapse:separate; border-spacing:0 6px;">
+                    <tr><th>Элемент</th><th>Символ</th><th>Произношение</th></tr>
+                    <tr><td>Водород</td><td><span class="sym">H</span></td><td>аш</td></tr>
+                    <tr><td>Кислород</td><td><span class="sym">O</span></td><td>о</td></tr>
+                    <tr><td>Углерод</td><td><span class="sym">C</span></td><td>цэ</td></tr>
+                    <tr><td>Фосфор</td><td><span class="sym">P</span></td><td>пэ</td></tr>
+                    <tr><td>Азот</td><td><span class="sym">N</span></td><td>эн</td></tr>
+                    <tr><td>Натрий</td><td><span class="sym">Na</span></td><td>натрий</td></tr>
+                    <tr><td>Литий</td><td><span class="sym">Li</span></td><td>литий</td></tr>
+                    <tr><td>Калий</td><td><span class="sym">K</span></td><td>калий</td></tr>
+                    <tr><td>Кальций</td><td><span class="sym">Ca</span></td><td>кальций</td></tr>
+                    <tr><td>Алюминий</td><td><span class="sym">Al</span></td><td>алюминий</td></tr>
+                    <tr><td>Сера</td><td><span class="sym">S</span></td><td>сера</td></tr>
+                    <tr><td>Хлор</td><td><span class="sym">Cl</span></td><td>хлор</td></tr>
+                    <tr><td>Медь</td><td><span class="sym">Cu</span></td><td>купрум</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-note">
+        ⚡ Символы химических элементов · интерактивный тренажёр
+    </div>
+</div>
+
+<script>
+    // ================= ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ =================
+    document.querySelectorAll('.page-nav button').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.page-nav button').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+
+            const pageId = this.dataset.page;
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(pageId).classList.add('active');
+        });
+    });
+
+    // ================= ДАННЫЕ =================
+    const elements = [
+        { name: 'ВОДОРОД', symbol: 'H',  read: 'аш' },
+        { name: 'КИСЛОРОД', symbol: 'O',  read: 'о' },
+        { name: 'УГЛЕРОД', symbol: 'C',  read: 'цэ' },
+        { name: 'ФОСФОР', symbol: 'P',  read: 'пэ' },
+        { name: 'АЗОТ', symbol: 'N',  read: 'эн' },
+        { name: 'НАТРИЙ', symbol: 'Na', read: 'натрий' },
+        { name: 'ЛИТИЙ', symbol: 'Li', read: 'литий' },
+        { name: 'КАЛИЙ', symbol: 'K',  read: 'калий' },
+        { name: 'КАЛЬЦИЙ', symbol: 'Ca', read: 'кальций' },
+        { name: 'АЛЮМИНИЙ', symbol: 'Al', read: 'алюминий' },
+        { name: 'СЕРА', symbol: 'S',  read: 'сера' },
+        { name: 'ХЛОР', symbol: 'Cl', read: 'хлор' },
+        { name: 'МЕДЬ', symbol: 'Cu', read: 'купрум' }
+    ];
+
+    const maxErrors = 6;
+    let currentElement = null;
+    let guessedLetters = [];
+    let errors = 0;
+    let gameOver = false;
+
+    // ================= DOM ЭЛЕМЕНТЫ =================
+    const wordSlots = document.getElementById('wordSlots');
+    const keyboard = document.getElementById('keyboard');
+    const hintBox = document.getElementById('hintBox');
+    const hintText = document.getElementById('hintText');
+    const messageBox = document.getElementById('messageBox');
+    const resultCard = document.getElementById('resultCard');
+    const resultFormula = document.getElementById('resultFormula');
+    const resultSalt = document.getElementById('resultSalt');
+    const resultName = document.getElementById('resultName');
+    const btnNewGame = document.getElementById('btnNewGame');
+    const btnRestart = document.getElementById('btnRestart');
+
+    // Части виселицы
+    const partIds = ['part-head', 'part-body', 'part-left-arm', 'part-right-arm', 'part-left-leg', 'part-right-leg'];
+    const parts = partIds.map(id => document.getElementById(id));
+
+    // ================= ФУНКЦИИ =================
+    function getRandomElement() {
+        const index = Math.floor(Math.random() * elements.length);
+        return elements[index];
+    }
+
+    function startGame(el = null) {
+        currentElement = el || getRandomElement();
+        guessedLetters = [];
+        errors = 0;
+        gameOver = false;
+
+        // Сброс виселицы
+        parts.forEach(p => p.classList.remove('visible'));
+
+        // Подсказка: только символ элемента
+        hintBox.classList.remove('visible');
+        hintText.textContent = currentElement.symbol;
+
+        // Сброс сообщений и результата
+        messageBox.className = 'message-box';
+        messageBox.textContent = '';
+        resultCard.classList.remove('visible');
+
+        // Отрисовка слотов для букв
+        wordSlots.innerHTML = '';
+        for (let i = 0; i < currentElement.name.length; i++) {
+            const slot = document.createElement('div');
+            slot.className = 'letter-slot';
+            slot.dataset.index = i;
+            slot.textContent = '';
+            wordSlots.appendChild(slot);
+        }
+
+        // Отрисовка клавиатуры
+        keyboard.innerHTML = '';
+        const alphabet = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ';
+        for (const letter of alphabet) {
+            const btn = document.createElement('button');
+            btn.className = 'key-btn';
+            btn.textContent = letter;
+            btn.dataset.letter = letter;
+            btn.addEventListener('click', () => handleGuess(letter));
+            keyboard.appendChild(btn);
+        }
+
+        updateKeyboardState();
+    }
+
+    function updateKeyboardState() {
+        document.querySelectorAll('.key-btn').forEach(btn => {
+            const letter = btn.dataset.letter;
+            if (guessedLetters.includes(letter)) {
+                btn.disabled = true;
+                if (currentElement.name.includes(letter)) {
+                    btn.classList.add('correct');
+                } else {
+                    btn.classList.add('incorrect');
+                }
+            } else {
+                btn.disabled = gameOver;
+            }
+        });
+    }
+
+    function updateWordDisplay() {
+        const slots = document.querySelectorAll('.letter-slot');
+        let allRevealed = true;
+        slots.forEach((slot, i) => {
+            const letter = currentElement.name[i];
+            if (guessedLetters.includes(letter)) {
+                slot.textContent = letter;
+                slot.classList.add('revealed');
+            } else {
+                slot.textContent = '';
+                slot.classList.remove('revealed');
+                allRevealed = false;
+            }
+        });
+        return allRevealed;
+    }
+
+    function handleGuess(letter) {
+        if (gameOver || guessedLetters.includes(letter)) return;
+
+        guessedLetters.push(letter);
+
+        if (currentElement.name.includes(letter)) {
+            // Правильная буква
+            const allRevealed = updateWordDisplay();
+            updateKeyboardState();
+
+            if (allRevealed) {
+                gameOver = true;
+                messageBox.textContent = '🎉 Победа! Вы угадали элемент!';
+                messageBox.className = 'message-box win';
+                showResult();
+                updateKeyboardState();
+            }
+        } else {
+            // Ошибка
+            errors++;
+            if (errors <= maxErrors) {
+                parts[errors - 1].classList.add('visible');
+            }
+
+            // После 4 ошибок показываем подсказку
+            if (errors >= 4) {
+                hintBox.classList.add('visible');
+            }
+
+            updateKeyboardState();
+
+            if (errors >= maxErrors) {
+                gameOver = true;
+                messageBox.textContent = '💀 Вы проиграли! Слово было: ' + currentElement.name;
+                messageBox.className = 'message-box lose';
+                showResult();
+                // Показать все буквы
+                document.querySelectorAll('.letter-slot').forEach((slot, i) => {
+                    slot.textContent = currentElement.name[i];
+                    slot.classList.add('missed');
+                });
+                updateKeyboardState();
+            }
+        }
+    }
+
+    function showResult() {
+        resultCard.classList.add('visible');
+        resultFormula.textContent = 'Символ: ' + currentElement.symbol;
+        resultSalt.textContent = 'Элемент: ' +
+            currentElement.name.charAt(0) + currentElement.name.slice(1).toLowerCase();
+        resultName.textContent = 'Произношение: «' + currentElement.read + '»';
+    }
+
+    function restartGame() {
+        startGame(currentElement);
+    }
+
+    // ================= ОБРАБОТЧИКИ =================
+    btnNewGame.addEventListener('click', () => startGame());
+    btnRestart.addEventListener('click', restartGame);
+
+    // Запуск игры
+    startGame();
+
+    // ================= ВВОД С ФИЗИЧЕСКОЙ КЛАВИАТУРЫ =================
+    // Карта физических клавиш (стандартная QWERTY / ЙЦУКЕН):
+    // работает и в русской, и в английской раскладке — по позиции клавиши.
+    const codeToRu = {
+        KeyQ: 'Й', KeyW: 'Ц', KeyE: 'У', KeyR: 'К', KeyT: 'Е',
+        KeyY: 'Н', KeyU: 'Г', KeyI: 'Ш', KeyO: 'Щ', KeyP: 'З',
+        BracketLeft: 'Х', BracketRight: 'Ъ',
+        KeyA: 'Ф', KeyS: 'Ы', KeyD: 'В', KeyF: 'А', KeyG: 'П',
+        KeyH: 'Р', KeyJ: 'О', KeyK: 'Л', KeyL: 'Д',
+        Semicolon: 'Ж', Quote: 'Э',
+        KeyZ: 'Я', KeyX: 'Ч', KeyC: 'С', KeyV: 'М', KeyB: 'И',
+        KeyN: 'Т', KeyM: 'Ь', Comma: 'Б', Period: 'Ю',
+        Backquote: 'Ё'
+    };
+    const RU_ALPHABET = 'АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ';
+
+    function highlightKey(letter) {
+        const btn = document.querySelector(`.key-btn[data-letter="${letter}"]`);
+        if (!btn || btn.disabled) return;
+        btn.classList.add('pressed');
+        setTimeout(() => btn.classList.remove('pressed'), 130);
+    }
+
+    document.addEventListener('keydown', (e) => {
+        // Работает только на странице игры и пока игра не окончена
+        if (!document.getElementById('gamePage').classList.contains('active')) return;
+        if (gameOver) return;
+        // Игнорируем сочетания с модификаторами
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+        let letter = null;
+        const direct = (e.key && e.key.length === 1) ? e.key.toUpperCase() : '';
+
+        // 1) Прямое совпадение — если раскладка уже русская
+        if (direct && RU_ALPHABET.includes(direct)) {
+            letter = direct;
+        }
+        // 2) По позиции физической клавиши — если раскладка английская (или любая другая QWERTY)
+        else if (codeToRu[e.code]) {
+            letter = codeToRu[e.code];
+        }
+
+        if (!letter) return;
+
+        e.preventDefault();
+        highlightKey(letter);
+        handleGuess(letter);
+    });
+</script>
+</body>
+</html>
